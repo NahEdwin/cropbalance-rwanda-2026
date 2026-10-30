@@ -28,7 +28,13 @@ Although NISR publishes valuable agricultural statistics, interpreting historica
 
 CropBalance Rwanda addresses this gap by bringing historical agricultural data, forecasting methods and interactive planning scenarios into one platform.
 
-## 3. Main Features
+## 3.  Project Demonstration throughout a video link
+
+Watch a demonstration of CropBalance Rwanda, showing the agricultural forecasting dashboard, commodity analysis, scenario exploration, and model evaluation.
+
+Video link: https://drive.google.com/file/d/19vy9zeS354kIGRpz-0bR2O49UcWTa6-u/view?usp=sharing
+
+## 4. Main Features
 
 The application provides four main functions:
 
@@ -48,7 +54,7 @@ Enables users to examine how changes in population growth, agricultural producti
 
 Compares different forecasting approaches using historical data and evaluates their performance against actual observations.
 
-## 4. Data Sources
+## 5. Data Sources
 
 The project uses publicly available Food Balance Sheet statistics published by the National Institute of Statistics of Rwanda.
 
@@ -67,7 +73,7 @@ All quantities are expressed in thousand metric tonnes unless otherwise specifie
 
 Detailed data references and extraction methods are available in [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md).
 
-## 5. Forecasting Methodology
+## 6. Forecasting Methodology
 
 The forecasting process combines historical agricultural utilization, production trends and population-related assumptions to estimate conditions for 2026.
 
@@ -100,7 +106,7 @@ Given the limited number of annual observations, the platform emphasizes transpa
 
 Further methodological details are provided in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
 
-## 6. Technology Stack
+## 7. Technology Stack
 
 CropBalance Rwanda was developed using the following technologies:
 
@@ -113,7 +119,7 @@ CropBalance Rwanda was developed using the following technologies:
 | Altair | Data visualization |
 | PyMuPDF | Extraction of data from source reports |
 
-## 7. Project Structure
+## 8. Project Structure
 
 The repository is organized as follows:
 
@@ -131,7 +137,7 @@ The repository is organized as follows:
 | `docs/JUDGING_DEMO.md` | Application demonstration |
 | `DECLARATION.md` | Project originality, attribution and development disclosures |
 
-## 8. Running the Application
+## 9. Running the Application
 
 The application can be run locally using Python.
 
@@ -157,7 +163,7 @@ The forecast outputs can be reproduced by running:
 python scripts/build_outputs.py
 ```
 
-## 9. Relevance to National Priorities
+## 10. Relevance to National Priorities
 
 CropBalance Rwanda addresses the NISR 2026 Big Data Hackathon's Agricultural Productivity track.
 
@@ -171,7 +177,7 @@ Its main areas of relevance include:
 - Informing post-harvest storage and loss-reduction strategies.
 - Strengthening the practical use of national agricultural statistics.
 
-## 10. Expected Contribution
+## 11. Expected Contribution
 
 CropBalance Rwanda provides a practical way to turn historical agricultural statistics into information that can support planning.
 
@@ -181,7 +187,7 @@ Its long-term potential includes supporting more efficient resource allocation, 
 
 These outcomes depend on the availability of reliable data, continued model improvement and adoption by relevant stakeholders.
 
-## 11. Limitations
+## 12. Limitations
 
 The platform is a research prototype based on national annual statistics.
 
@@ -189,7 +195,7 @@ Its forecasts are exploratory estimates and should not be interpreted as officia
 
 The current version does not provide farm-level or district-level production forecasts. Further development would benefit from additional agricultural survey data, weather information, commodity prices and more detailed geographical observations.
 
-## 12. References and Acknowledgments
+## 13. References and Acknowledgments
 
 We acknowledge the National Institute of Statistics of Rwanda for making agricultural statistics publicly available and for organizing the 2026 Big Data Hackathon.
 
