@@ -1,4 +1,4 @@
-"""CropBalance Rwanda | 2026 NISR Big Data Hackathon student prototype.
+"""CropBalance Rwanda | NISR 2026 Big Data Hackathon.
 
 Entry point for Streamlit Community Cloud: app.py
 """
@@ -27,9 +27,10 @@ st.markdown("""
   .hero h1 {color:#fff!important;font-size:2.15rem!important;letter-spacing:-.025em;margin:0 0 .25rem 0;}
   .hero p {color:#e0efe6!important;margin:0;font-size:1.05rem;max-width:940px;}
   .eyebrow {color:#a9ddbe!important;font-size:.76rem!important;font-weight:750;letter-spacing:.14em;}
-  div[data-testid="stMetric"] {background:#f5f8f4; padding:15px 18px; border:1px solid #e5ebe4; border-radius:13px;}
-  div[data-testid="stMetricLabel"] {font-weight:600;}
-  .note {border-left:3px solid #35745c; padding:10px 14px; background:#f6f9f5; border-radius:0 8px 8px 0;}
+  div[data-testid="stMetric"] {background:#f5f8f4; color:#1b2c27!important; padding:15px 18px; border:1px solid #e5ebe4; border-radius:13px;}
+  div[data-testid="stMetricLabel"] {font-weight:600; color:#1b2c27!important;}
+  div[data-testid="stMetricLabel"] *, div[data-testid="stMetricValue"], div[data-testid="stMetricValue"] * {color:#1b2c27!important;}
+  .note {border-left:3px solid #35745c; padding:10px 14px; background:#f6f9f5; color:#1b2c27; border-radius:0 8px 8px 0;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -46,36 +47,39 @@ source, engine = load_and_model()
 
 st.markdown("""
 <div class="hero">
-  <div class="eyebrow">NISR BIG DATA HACKATHON 2026 · AGRICULTURE TRACK</div>
+  <div class="eyebrow">NISR BIG DATA HACKATHON 2026 | AGRICULTURAL PRODUCTIVITY</div>
   <h1>CropBalance Rwanda</h1>
-  <p>What might Rwanda's domestic agricultural utilization and production coverage look like in 2026? Explore nine years of NISR food-balance statistics, model forecasts, and planning scenarios.</p>
+  <p>2026 agricultural production and domestic utilization outlook using NISR Food Balance Sheet data. Compare commodities, examine forecasts and explore planning scenarios.</p>
 </div>
 """, unsafe_allow_html=True)
-st.caption("Independent student research prototype · Not an official NISR or Government of Rwanda forecast · Figures are annual national estimates, not district-level or farm-level predictions.")
+st.caption("National-level analysis | 15 selected commodities | Historical data: 2017-2025")
 
 with st.sidebar:
     st.markdown("## Scenario lab")
-    st.caption("Change assumptions and watch the 2026 outlook update. These are hypothetical changes, not real forecasts of droughts or interventions.")
+    st.caption("Explore how population growth, production and food-loss assumptions affect the 2026 outlook.")
     population_growth = st.slider("Assumed 2026 population growth", 0.0, 4.0, 2.2, 0.1, format="%.1f%%",
-                                  help="Applied only to the modeled human-food component. 2.2% is a scenario default, NOT an official NISR 2026 population projection.")
+                                  help="Scenario assumption applied to estimated human-food use; not an official population projection.")
     target_crop = st.selectbox("Apply production change to", ["All commodities"] + sorted(source.commodity.unique().tolist()))
     prod_change = st.slider("Production change relative to forecast", -30, 30, 0, 5, format="%d%%")
-    loss_reduction = st.slider("Hypothetical reduction in recorded food loss", 0, 50, 0, 5, format="%d%%")
+    loss_reduction = st.slider("Assumed reduction in recorded food losses", 0, 50, 0, 5, format="%d%%",
+                               help="Scenario assumption, not an observed change in losses.")
     st.divider()
     st.markdown("**Data and forecast**")
-    st.caption("NISR Rwanda Food Balance Sheets (2017–2021, 2022, 2023–2024 and 2025). Fifteen selected commodities; quantities in thousand metric tonnes (kt).")
+    st.caption("Source: NISR Food Balance Sheets, 2017-2025. Quantities are in thousand metric tonnes (kt).")
     st.caption("Models: persistence, 3-year mean, damped trend and pooled random forest; chosen with rolling backtests.")
-    st.caption("Forecast bands are heuristic and are **not** calibrated probabilities.")
+    st.caption("Forecast ranges are indicative and not calibrated confidence intervals.")
 
 outlook = scenario_forecasts(engine, population_growth, prod_change, loss_reduction, target_crop)
 by_crop = outlook.set_index("commodity")
 metrics = holdout_metrics(engine["holdout_2025"])
 
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Commodities analyzed", len(outlook))
-c2.metric("2026 assumed population", f"{float(outlook.assumed_population_2026_millions.iloc[0]):.2f}M")
-c3.metric("2026 modeled coverage", f"{100*outlook.production_2026_kt.sum()/outlook.utilization_2026_kt.sum():.0f}%")
-c4.metric("2026 modelled use", f"{outlook.utilization_2026_kt.sum():,.0f} kt")
+c1.metric("Selected commodities", len(outlook))
+c2.metric("2026 population scenario", f"{float(outlook.assumed_population_2026_millions.iloc[0]):.2f}M")
+c3.metric("2026 production coverage", f"{100*outlook.production_2026_kt.sum()/outlook.utilization_2026_kt.sum():.0f}%")
+c4.metric("2026 domestic utilization", f"{outlook.utilization_2026_kt.sum():,.0f} kt")
+
+st.caption("Production coverage and domestic utilization totals refer to the 15 selected commodities.")
 
 view1, view2, view3, view4 = st.tabs([
     "National outlook", "Commodity explorer", "Forecast checks", "Data & method"
@@ -83,11 +87,11 @@ view1, view2, view3, view4 = st.tabs([
 
 with view1:
     st.markdown("### Production relative to estimated domestic use, 2026")
-    st.caption("Negative bars indicate modeled domestic utilization greater than domestic production. This is **not equivalent to a food shortage**: imports, exports and stocks also matter.")
+    st.caption("Negative values indicate production below estimated domestic utilization. Trade and stock changes also affect food availability.")
     chart_df = outlook[["commodity", "production_minus_use_kt"]].copy()
     chart_df["direction"] = np.where(chart_df.production_minus_use_kt >= 0, "Above estimated use", "Below estimated use")
     barchart = alt.Chart(chart_df).mark_bar(cornerRadiusEnd=3).encode(
-        y=alt.Y("commodity:N", sort=alt.SortField(field="production_minus_use_kt", order="ascending"), title=None),
+        y=alt.Y("commodity:N", sort=alt.SortField(field="production_minus_use_kt", order="ascending"), title=None, axis=alt.Axis(labelLimit=230)),
         x=alt.X("production_minus_use_kt:Q", title="Production minus estimated domestic utilization (thousand metric tonnes)"),
         color=alt.Color("direction:N", scale=alt.Scale(domain=["Below estimated use", "Above estimated use"], range=["#bc5d39", "#2c8067"]), legend=None),
         tooltip=[alt.Tooltip("commodity:N", title="Commodity"),
@@ -95,7 +99,7 @@ with view1:
     ).properties(height=445)
     st.altair_chart(barchart, use_container_width=True)
 
-    st.markdown("#### 2026 planning dashboard")
+    st.markdown("#### Commodity-level outlook for 2026")
     show = outlook[["commodity", "production_2026_kt", "utilization_2026_kt", "production_minus_use_kt", "coverage_pct", "assessment"]].copy()
     show = show.rename(columns={"commodity":"Commodity", "production_2026_kt":"Production (kt)",
                                 "utilization_2026_kt":"Domestic use (kt)", "production_minus_use_kt":"Production - use (kt)",
@@ -109,7 +113,7 @@ with view1:
     st.download_button("Download 2026 scenario as CSV", outlook.to_csv(index=False).encode("utf-8"),
                        file_name="cropbalance_2026_scenario.csv", mime="text/csv", key="download_outlook")
 
-    st.markdown("#### How to interpret the result")
+    st.markdown("#### Planning implications")
     left, right = st.columns(2)
     with left:
         st.markdown("**When domestic production is below modeled use**")
@@ -117,7 +121,7 @@ with view1:
     with right:
         st.markdown("**When modeled production exceeds use**")
         st.write("Cooperatives and planners could explore storage, processing and marketing options, after checking expected trade flows, geographic distribution and seasonal timing.")
-    st.info("Planning signal only. Neither an import requirement nor an actual national food shortage or marketable surplus can be determined from this simplified annual comparison.")
+    st.caption("Production-use differences do not independently establish import requirements, food shortages or marketable surpluses.")
 
 with view2:
     st.markdown("### Explore one commodity")
@@ -156,7 +160,7 @@ with view2:
         tooltip=["series:N", alt.Tooltip("lower:Q", format=",.1f"), alt.Tooltip("upper:Q", format=",.1f")],
     )
     st.altair_chart((rules + lines).properties(height=350), use_container_width=True)
-    st.caption("2017–2025: observed NISR data. 2026: modeled scenario. Vertical marks show indicative uncertainty ranges, not 80% or 95% statistical confidence intervals.")
+    st.caption("2017-2025: observed NISR statistics | 2026: modeled scenario | Forecast ranges are indicative, not calibrated confidence intervals.")
 
     if s.assessment == "Below use across indicative range":
         summary = "Domestic production is projected below total domestic utilization across the indicative ranges. Consider productivity, trade and stock planning."
@@ -164,11 +168,11 @@ with view2:
         summary = "Modeled production exceeds utilization across the indicative ranges. Review storage, trade and processing possibilities."
     else:
         summary = "The indicative production and utilization ranges overlap; the direction of the gap is uncertain."
-    st.markdown(f"<div class='note'><strong>Model interpretation:</strong> {summary}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='note'><strong>Planning interpretation:</strong> {summary}</div>", unsafe_allow_html=True)
 
     sub1, sub2 = st.columns([1.15, 1])
     with sub1:
-        st.markdown("#### 2025 published utilization components")
+        st.markdown("#### 2025 domestic-use components")
         last = hist.iloc[-1]
         components = pd.DataFrame({"Component":["Food", "Processing", "Loss", "Feed", "Seed", "Other uses"],
                                    "kt":[last.food_kt, last.processed_kt, last.loss_kt, last.feed_kt, last.seed_kt, last.other_kt]})
@@ -190,15 +194,15 @@ with view2:
         st.caption("Models are selected by one-year-ahead error in 2022–2025; the pooled random forest competes against three statistical baselines.")
 
 with view3:
-    st.markdown("### Does the forecasting system actually work?")
-    st.write("We simulated the full 2025 year using **only data through 2024**. Which models to combine were chosen using backtests from 2022 to 2024. We then compared the 2025 prediction with NISR's actual 2025 values.")
+    st.markdown("### Forecast validation against 2025 observations")
+    st.write("Forecasts for 2025 were generated from **2017-2024 data**, with model selection based on earlier backtests. Predictions were then compared against NISR's published 2025 figures.")
     v1, v2, v3, v4 = st.columns(4)
-    v1.metric("2025 use WAPE · blend", f"{metrics['use_wape_pct']:.1f}%")
-    v2.metric("2025 use WAPE · last year", f"{metrics['use_baseline_wape_pct']:.1f}%")
-    v3.metric("2025 production WAPE · blend", f"{metrics['production_wape_pct']:.1f}%")
-    v4.metric("2025 production WAPE · last year", f"{metrics['production_baseline_wape_pct']:.1f}%")
-    st.warning("Important: in this holdout test, the simple last-year baseline is more accurate than the model blend. Nine annual records per crop are too few to assume a complex model will do better. We report the comparison rather than hiding it.")
-    st.caption("WAPE = sum of absolute errors divided by sum of observed volumes. For the domestic-use holdout, the actual implied 2025 population is used to isolate the accuracy of per-capita utilization and other-use forecasts. This is not a full population-forecast test.")
+    v1.metric("Use error | blended", f"{metrics['use_wape_pct']:.1f}%")
+    v2.metric("Use error | baseline", f"{metrics['use_baseline_wape_pct']:.1f}%")
+    v3.metric("Production error | blended", f"{metrics['production_wape_pct']:.1f}%")
+    v4.metric("Production error | baseline", f"{metrics['production_baseline_wape_pct']:.1f}%")
+    st.info("The last-year baseline achieved lower errors than the blended model in the 2025 validation. Both results are presented to support model comparison.")
+    st.caption("Error metric: weighted absolute percentage error (WAPE); lower is better. The domestic-use evaluation uses observed 2025 implied population to isolate model error and does not assess population-forecast accuracy.")
 
     val = engine["holdout_2025"].copy()
     t = st.radio("Choose measure", ["Domestic utilization", "Production"], horizontal=True)
@@ -220,6 +224,7 @@ with view3:
 
 with view4:
     st.markdown("### Sources and reproducibility")
+    st.caption("The 2026 outlook consists of scenario-based estimates for planning, not official NISR projections.")
     st.markdown("""
     **Primary sources:** National Institute of Statistics of Rwanda (NISR),
     *Rwanda Food Balance Sheets 2017–2021* (May 2023),
@@ -246,13 +251,13 @@ with view4:
     - The uncertainty bands are heuristic and must not be interpreted as calibrated prediction intervals.
     - The 2024 FBS population header appears inconsistent with commodity quantities divided by per-capita use. We derive implied population and disclose the discrepancy.
     - Crop processing equivalence matters (e.g., rice is reported in milled equivalent); compare categories with care.
-    - The data are public statistics; this prototype does not estimate individual household demand or actual farm harvests.
+    - The analysis uses national statistics and does not estimate individual household demand or specific farm harvests.
     - Model comparisons include a pooled ML benchmark, but the holdout shows that the statistical baseline can be stronger.
     """)
     st.download_button("Download cleaned NISR history", source.to_csv(index=False).encode("utf-8"),
                        file_name="cropbalance_nisr_2017_2025.csv", mime="text/csv", key="download_history")
     st.caption("Source attribution: © National Institute of Statistics of Rwanda. NISR website generally states CC BY 4.0 unless otherwise indicated. Source report terms should also be respected.")
-    st.caption("Project uses Python, Streamlit, pandas, Altair, NumPy and scikit-learn. AI-assistant support and originality are disclosed in DECLARATION.md.")
+    st.caption("Implementation: Python, Streamlit, pandas, Altair, NumPy and scikit-learn. Source attribution and development disclosures are available in the repository documentation.")
 
 st.divider()
-st.caption("CropBalance Rwanda · 2026 student prototype · Data: NISR Food Balance Sheets, 2017–2025 · Results are exploratory and subject to verification with seasonal agriculture and trade data.")
+st.caption("CropBalance Rwanda | Team AnyX | NISR Big Data Hackathon 2026 | Data: NISR Food Balance Sheets (2017-2025)")
